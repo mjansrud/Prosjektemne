@@ -23,10 +23,17 @@ void setup() {
   DW1000Ranging.attachBlinkDevice(newBlink);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   //Enable the filter to smooth the distance
-  //DW1000Ranging.useRangeFilter(true);
+  DW1000Ranging.useRangeFilter(true);
   
   //we start the module as an anchor
-  DW1000Ranging.startAsAnchor("82:17:5B:D5:A9:9A:E2:9C", DW1000.MODE_LONGDATA_RANGE_ACCURACY);
+  //MODE_LONGDATA_RANGE_LOWPOWER
+  //MODE_SHORTDATA_FAST_LOWPOWER
+  //MODE_LONGDATA_FAST_LOWPOWER
+  //MODE_SHORTDATA_FAST_ACCURACY
+  //MODE_LONGDATA_FAST_ACCURACY
+  //MODE_LONGDATA_RANGE_ACCURACY
+  
+  DW1000Ranging.startAsAnchor("82:17:5B:D5:A9:9A:E2:9C", DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
 }
 
 void loop() {
