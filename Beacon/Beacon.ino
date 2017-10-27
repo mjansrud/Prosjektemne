@@ -9,9 +9,9 @@
 #include "DW1000Ranging.h"
 
 // connection pins
-const uint8_t PIN_RST = 9; // reset pin
-const uint8_t PIN_IRQ = 2; // irq pin
-const uint8_t PIN_SS = SS; // spi select pin
+const uint8_t PIN_RST = 2; // reset pin
+const uint8_t PIN_IRQ = 3; // irq pin
+const uint8_t PIN_SS = 4; // spi select pin
 
 void setup() {
   Serial.begin(115200);
