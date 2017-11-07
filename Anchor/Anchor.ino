@@ -23,7 +23,7 @@ void setup() {
   DW1000Ranging.attachBlinkDevice(newBlink);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
   //Enable the filter to smooth the distance
-  DW1000Ranging.useRangeFilter(true);
+  //DW1000Ranging.useRangeFilter(true);
   
   //we start the module as an anchor
   //MODE_LONGDATA_RANGE_LOWPOWER
@@ -33,7 +33,8 @@ void setup() {
   //MODE_LONGDATA_FAST_ACCURACY
   //MODE_LONGDATA_RANGE_ACCURACY
   
-  DW1000Ranging.startAsAnchor("82:17:5B:D5:A9:9A:E2:9C", DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
+  //we start the module as an anchor
+  DW1000Ranging.startAsAnchor("82:17:5B:D5:A9:9A:E2:9C", DW1000.MODE_LONGDATA_RANGE_ACCURACY);
 }
 
 void loop() {
@@ -41,19 +42,22 @@ void loop() {
 }
 
 void newRange() {
-  Serial.print("from: "); Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-  Serial.print("\t Range: "); Serial.print(DW1000Ranging.getDistantDevice()->getRange()); Serial.print(" m");
-  Serial.print("\t RX power: "); Serial.print(DW1000Ranging.getDistantDevice()->getRXPower()); Serial.println(" dBm");
+  Serial.print("{type: 'range', device: { "); Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+  Serial.print(", data: { distance: "); Serial.print(DW1000Ranging.getDistantDevice()->getRange());
+  Serial.print(", power: ");    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower()); 
+  Serial.println("}}");
 }
 
 void newBlink(DW1000Device* device) {
-  Serial.print("blink; 1 device added ! -> ");
-  Serial.print(" short:");
-  Serial.println(device->getShortAddress(), HEX);
+  Serial.print("{type: 'newDevice', device: ");
+  Serial.print(device->getShortAddress(), HEX);
+  Serial.println("}");
 }
 
 void inactiveDevice(DW1000Device* device) {
-  Serial.print("delete inactive device: ");
-  Serial.println(device->getShortAddress(), HEX);
+  Serial.print("{type: 'inactiveDevice', device: ");
+  Serial.print(device->getShortAddress(), HEX);
+  Serial.println("}");
 }
+
 
