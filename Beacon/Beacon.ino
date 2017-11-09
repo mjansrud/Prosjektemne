@@ -7,13 +7,15 @@
  */
 #include <SPI.h>
 #include <DW1000.h>
-#include "DW1000Ranging.h"
+#include <DW1000Ranging.h>
+#include <DW1000Positioning.h>
 
 // connection pins
 const uint8_t PIN_RST = 2; // reset pin
 const uint8_t PIN_IRQ = 3; // irq pin
 const uint8_t PIN_SS = 4; // spi select pin
-const uint8_t ADDRESS = "7D:00:22:EA:82:60:3B:9C";
+const uint8_t ADDRESS = 5;
+const uint8_t NETWORK_ID = 10;
 
 // variables for message system
 volatile boolean sending = false;
@@ -21,59 +23,58 @@ volatile boolean sending = false;
 // timers
 unsigned long timer = 0;
 
-// states
-bool configuration = false;
-bool ready = false;
-
 // constants
-const long CONFIG_TIME = 10000; //milliseconds
-const long INIT_POLLING_TIME = 10000; //milliseconds
-
-enum STATES{
-  CONFIG,   //Receive distances from other anchor and other beacons
-  SENDER,   //Send the distances to the beacon
-  RANGER,   //Send the distances to the beacon
-};
-
-STATES state = CONFIG;
+const long INIT_POLLING_TIME = 5000; //milliseconds
+const long CONFIG_TIME = 5000;       //milliseconds
+const uint8_t NUM_BEACONS = 3;
 
 void setup() {
   Serial.begin(115200);
   delay(1000);
+
+  //Distances between beacons are needed for configuration
+  initRangeConfiguration();
   
   //Start receiving distances from anchor and other beacons 
-  initRangeConfiguration();
-
+  DW1000Positioning.startAsBeacon(ADDRESS);
+  
+  Serial.print("Initiated beacon -> address "); 
+  Serial.println(ADDRESS); 
+  Serial.println("Ready to receive data from beacons");
+  
 }
 
 void loop() {
   timer = millis();
 
-  switch (state){
+  switch (DW1000Positioning.getState()){
     case CONFIG:
+      DW1000Ranging.loop();
+
+      //Switch state
       if(timer > INIT_POLLING_TIME){
+        Serial.println("Ready to send data to anchor");
         initMessageConfiguration();
-        configuration = true;
-        state = SENDER;
+        DW1000Positioning.setState(SENDER);
       }
     break;    
     case SENDER:
+      if(!sending){
+        sendMessage();
+        delay(100);
+      }
+      
+      //Switch state
       if(timer > (INIT_POLLING_TIME + CONFIG_TIME)){
         initRangeConfiguration();
-        configuration = false;
-        state = RANGER;
+        DW1000Positioning.setState(RANGER);
       }
-      sendMessage();
       break;
-    default:
-    break;
-  }
-
-  switch (state){
-    case CONFIG:
     case RANGER:
       DW1000Ranging.loop();
-    break;
+      break;
+    default:
+      break;
   }
   
 }
@@ -84,10 +85,10 @@ void loop() {
 void initRangeConfiguration(){
   // Ranging driver configuration
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
-  DW1000Ranging.attachNewRange(newRange);
+  DW1000Ranging.attachNewRange(newDistance);
   DW1000Ranging.attachNewDevice(newDevice);
   DW1000Ranging.attachInactiveDevice(inactiveDevice);
-  DW1000Ranging.startAsTag(ADDRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY);
+  DW1000Ranging.startAsTag("7D:00:22:EA:82:60:3B:9C", DW1000.MODE_LONGDATA_RANGE_ACCURACY);
 }
 
 void initMessageConfiguration(){
@@ -96,8 +97,8 @@ void initMessageConfiguration(){
   DW1000.select(PIN_SS);
   DW1000.newConfiguration();
   DW1000.setDefaults();
-  DW1000.setDeviceAddress(5);
-  DW1000.setNetworkId(10);
+  DW1000.setDeviceAddress(ADDRESS);
+  DW1000.setNetworkId(NETWORK_ID);
   DW1000.enableMode(DW1000.MODE_LONGDATA_RANGE_LOWPOWER);
   DW1000.commitConfiguration();
   
@@ -109,12 +110,12 @@ void initMessageConfiguration(){
  */
 
 void sendMessage() {
+  sending = true;
   DW1000.newTransmit();
   DW1000.setDefaults();
-  sending = true;
 
   //Make message
-  String msg = "Hello DW1000, it's #"; msg += String(ADDRESS);
+  String msg = DW1000Positioning.createJsonDistance(DW1000Positioning.getNextDevice());
   Serial.print("Transmitting '"); 
   Serial.print(msg);
   Serial.println("'");
@@ -135,22 +136,26 @@ void handleSent() {
  * Ranges
  */
  
-void newRange() {
-  Serial.print("{type: 'range', device: { "); Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
-  Serial.print(", data: { distance: "); Serial.print(DW1000Ranging.getDistantDevice()->getRange());
-  Serial.print(", power: ");    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower()); 
+void newDistance() {
+  Serial.print("{type:'range',device:{"); Serial.print(DW1000Ranging.getDistantDevice()->getShortAddress(), HEX);
+  Serial.print(",data:{distance:"); Serial.print(DW1000Ranging.getDistantDevice()->getRange());
+  Serial.print(",power:");    Serial.print(DW1000Ranging.getDistantDevice()->getRXPower()); 
   Serial.println("}}");
+  DW1000Positioning.setDistance(DW1000Ranging.getDistantDevice()->getShortAddress(), DW1000Ranging.getDistantDevice()->getRange());
 }
 
 void newDevice(DW1000Device* device) {
-  Serial.print("{type: 'newDevice', device: ");
+  Serial.print("{type:'newDevice',device:");
   Serial.print(device->getShortAddress(), HEX);
   Serial.println("}");
+  DW1000Positioning.addNetworkDevice(device->getShortAddress());
 }
 
 void inactiveDevice(DW1000Device* device) {
-  Serial.print("{type: 'inactiveDevice', device: ");
+  Serial.print("{type:'inactiveDevice',device:");
   Serial.print(device->getShortAddress(), HEX);
   Serial.println("}");
+  //DW1000Positioning.removeNetworkDevice(device->getShortAddress());
 }
+
 
