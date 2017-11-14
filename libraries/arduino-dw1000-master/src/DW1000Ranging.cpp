@@ -159,7 +159,7 @@ void DW1000RangingClass::generalStart() {
 }
 
 
-void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const bool randomShortAddress) {
+void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], uint8_t shortAddress, const bool randomShortAddress = false) {
 	//save the address
 	DW1000.convertToByte(address, _currentAddress);
 	//write the address on the DW1000 chip
@@ -173,9 +173,9 @@ void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const 
 		_currentShortAddress[1] = random(0, 256);
 	}
 	else {
-		// we use first two bytes in addess for short address
-		_currentShortAddress[0] = _currentAddress[0];
-		_currentShortAddress[1] = _currentAddress[1];
+        // we use first two bytes in addess for short address
+        _currentShortAddress[0] = shortAddress;
+        _currentShortAddress[1] = 0;
 	}
 	
 	//we configur the network for mac filtering
@@ -188,11 +188,11 @@ void DW1000RangingClass::startAsAnchor(char address[], const byte mode[], const 
 	//defined type as anchor
 	_type = ANCHOR;
 	
-	Serial.println("### ANCHOR ###");
+	Serial.println("### ANCHOR ###"); 
 	
 }
 
-void DW1000RangingClass::startAsTag(char address[], const byte mode[], const bool randomShortAddress) {
+void DW1000RangingClass::startAsTag(char address[], const byte mode[], uint8_t shortAddress, const bool randomShortAddress = false) {
 	//save the address
 	DW1000.convertToByte(address, _currentAddress);
 	//write the address on the DW1000 chip
@@ -206,9 +206,9 @@ void DW1000RangingClass::startAsTag(char address[], const byte mode[], const boo
 		_currentShortAddress[1] = random(0, 256);
 	}
 	else {
-		// we use first two bytes in addess for short address
-		_currentShortAddress[0] = _currentAddress[0];
-		_currentShortAddress[1] = _currentAddress[1];
+        // we use first two bytes in addess for short address
+        _currentShortAddress[0] = shortAddress;
+        _currentShortAddress[1] = 0;
 	}
 	
 	//we configur the network for mac filtering

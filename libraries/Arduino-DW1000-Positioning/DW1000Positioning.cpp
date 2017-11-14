@@ -10,21 +10,21 @@
 
 DW1000PositioningClass DW1000Positioning;
 
-void DW1000PositioningClass::startAsAnchor(uint16_t _address){
+void DW1000PositioningClass::startAsAnchor(uint8_t _address){
     
-    _isAnchor = true;
-    _device.type = "anchor";
-    _device.address = _address;
-    initEmptyBeacons();
+    initDevices();
+    
+    _isTag = false;
+    _device = _devices[_address];
     
 }
 
-void DW1000PositioningClass::startAsBeacon(uint16_t _address){
+void DW1000PositioningClass::startAsTag(uint8_t _address){
     
-    _isAnchor = false;
-    _device.type = "beacon";
-    _device.address = _address;
-    initEmptyBeacons();
+    initDevices();
+    
+    _isTag = true;
+    _device = _devices[_address];
     
 }
 
@@ -33,61 +33,62 @@ void DW1000PositioningClass::loop(){
     
 }
 
-void DW1000PositioningClass::initTestBeacons(){
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        struct _Node _beacon;
-        _beacon.type = "beacon";
-        _beacon.address = random(20, 60);
-        _beacon.distance = random(2, 100);
-        _networkDevices[i] = _beacon;
-    }
-}
-
-
-void DW1000PositioningClass::initEmptyBeacons(){
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        struct _Node _beacon;
-        _beacon.type = "beacon";
-        _networkDevices[i] = _beacon;
-    }
-}
-
-void DW1000PositioningClass::addNetworkDevice(uint16_t _address){
-    bool _exists = false;
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        if(_networkDevices[i].address == _address){
-            _exists = true;
-            break;
+void DW1000PositioningClass::initTestDevices(){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        struct _Node _node;
+        if(i == 0){
+            _node.type = "tag";
+        }else{
+            _node.type = "anchor";
         }
+        _node.address = i;
+        _node.distance = random(2, 100);
+        _devices[i] = _node;
     }
-    if(!_exists){
-        for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-            if(!_networkDevices[i].address){
-                _networkDevices[i].address = _address;
-                break;
-            }
+}
+
+
+void DW1000PositioningClass::initDevices(){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        struct _Node _node;
+        if(i == 0){
+            _node.type = "tag";
+        }else{
+            _node.type = "anchor";
+        }
+        _node.address = i;
+        _node.active = false;
+        _devices[i] = _node;
+    }
+}
+
+void DW1000PositioningClass::activeDevice(uint8_t _address){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        if(_devices[i].address == _address){
+            _devices[i].active = true;
+            break;
         }
     }
     serialSendDistances();
 }
 
-void DW1000PositioningClass::removeNetworkDevice(uint16_t _address){
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        if(_networkDevices[i].address == _address){
-            _networkDevices[i].address = 0;
-            _networkDevices[i].distance = 0.0;
-            _networkDevices[i].position.x = 0.0;
-            _networkDevices[i].position.y = 0.0;
-            _networkDevices[i].position.z = 0.0;
+void DW1000PositioningClass::inactiveDevice(uint8_t _address){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        if(_devices[i].address == _address){
+            _devices[i].active = false;
+            _devices[i].distance = 0.0;
+            _devices[i].position.x = 0.0;
+            _devices[i].position.y = 0.0;
+            _devices[i].position.z = 0.0;
             break;
         }
     }
 }
 
-void DW1000PositioningClass::setDistance(uint16_t _address, float _distance){
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        if(_networkDevices[i].address == _address){
-            _networkDevices[i].distance = _distance;
+void DW1000PositioningClass::setDistance(uint8_t _address, float _distance){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        if(_devices[i].address == _address){
+            _devices[i].distance = _distance;
             break;
         }
     }
@@ -121,6 +122,8 @@ String DW1000PositioningClass::createJsonDistance(struct _Node _node){
     String json;
     json += "{type:";
     json += DISTANCE;
+    json += ",from:";
+    json += _device.address;
     json += ",to:";
     json += _node.address;
     json += ",distance:";
@@ -136,14 +139,12 @@ String DW1000PositioningClass::createJsonDistances(){
      */
     String json;
     json += "[";
-    if(_device.address > 0){
-        json += createJsonDistance(_device);
-        json += ",";
-    }
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        json += createJsonDistance(_networkDevices[i]);
-        if(i !=_NUM_NETWORK_DEVICES - 1){
-            json += ",";
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        if(_device.address != _devices[i].address){
+            json += createJsonDistance(_devices[i]);
+            if(i !=_NUM_DEVICES - 1){
+                json += ",";
+            }
         }
     }
     json += "]";
@@ -154,34 +155,32 @@ String DW1000PositioningClass::createJsonDistances(){
 String DW1000PositioningClass::createJsonPositions(){
     String json;
     json += "[";
-    if(_device.type.length() > 0){
-        json += createJsonPosition(_device);
-        json += ",";
-    }
-    for (uint8_t i = 0; i < _NUM_NETWORK_DEVICES; i++){
-        json += createJsonPosition(_networkDevices[i]);
-        if(i !=_NUM_NETWORK_DEVICES - 1){
-            json += ",";
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        if(_device.address != _devices[i].address){
+            json += createJsonPosition(_devices[i]);
+            if(i !=_NUM_DEVICES - 1){
+                json += ",";
+            }
         }
     }
     json += "]";
     return json;
 }
 
-void DW1000PositioningClass::serialSendPositition(struct _Node _device){
-    Serial.println(createJsonPosition(_device));
+void DW1000PositioningClass::serialSendPositition(struct _Node _node){
+    Serial.println(createJsonPosition(_node));
 }
 
 void DW1000PositioningClass::serialSendPosititions(){
     Serial.println(createJsonPositions());
 }
 
-void DW1000PositioningClass::serialSendDistance(struct _Node _device){
-    Serial.println(createJsonPosition(_device));
+void DW1000PositioningClass::serialSendDistance(struct _Node _node){
+    Serial.println(createJsonDistance(_node));
 }
 
 void DW1000PositioningClass::serialSendDistances(){
-    Serial.println(createJsonPositions());
+    Serial.println(createJsonDistances());
 }
 
 /*
@@ -190,7 +189,7 @@ void DW1000PositioningClass::serialSendDistances(){
 
 struct _Node DW1000PositioningClass::getNextDevice(){
     _nextDevice == 2 ? _nextDevice = 0 : _nextDevice++;
-    return _networkDevices[_nextDevice];
+    return _devices[_nextDevice];
 }
 
 struct _Node DW1000PositioningClass::getDevice(){
