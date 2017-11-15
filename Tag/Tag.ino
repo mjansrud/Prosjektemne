@@ -30,7 +30,6 @@ volatile boolean received = false;
 volatile boolean error = false;
 
 // timers
-//Timer timer;
 unsigned long time_current = 0;
 unsigned long time_start = 0;
 
@@ -39,7 +38,6 @@ void setup() {
   delay(1000);
 
   time_start = millis();
-  //timer.every(5000, serialSendDistances);
   
   //Distances between beacons are needed for configuration
   DW1000RangingInitConfiguration(TAG);
@@ -54,13 +52,7 @@ void setup() {
 
 }
 
-void serialSendDistances()
-{
-  DW1000Positioning.serialDrawDistances();
-}
-
 void loop() {
-  //timer.update();
   time_current = millis() - time_start;
   
   switch (DW1000Positioning.getState()){  
