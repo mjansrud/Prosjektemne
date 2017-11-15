@@ -11,39 +11,37 @@
 
 #include <string.h>
 #include <arduino.h>
+#include <ArduinoJson.h>
+
+// conts
+#define _NUM_DEVICES 4
+#define _LEN_DATA 90
 
 // structs
 struct _Node{
-    String type;
     bool active;
-    uint16_t address = 0;
+    uint8_t address = 0;
     float distance = 0.0;
     struct {
-        float x = 0.0;
-        float y = 0.0;
-        float z = 0.0;
-    } position;
+        float distance = 0.0;
+    } distances[_NUM_DEVICES];
 };
 
-// states
-enum _STATES{
-    CONFIG,
-    SENDER,         //Anchors -> Send all distances to tah
-    RECEIVER,       //Tag -> Receive all distances from Anchors, parallell with SENDER
-    RANGING,        //Nodes receives distances from other nodes
-    INVALID,
-};
-
-// states
 enum _MESSAGE_TYPE{
     POSITION,
     DISTANCE,
 };
 
-// conts
-#define _NUM_DEVICES 4
+// states
+enum _STATES{
+    CONFIG,
+    SENDER,         //Anchors -> Send all distances to tag
+    RECEIVER,       //Tag -> Receive all distances from Anchors, parallell with SENDER
+    RANGING,        //Nodes receives distances from other nodes
+    INVALID,
+};
 
-// Results returned from the decoder
+
 class DW1000PositioningClass {
   public:
     
@@ -58,8 +56,9 @@ class DW1000PositioningClass {
     void DW1000PositioningClass::serialSendPositition(struct _Node _node);
     void DW1000PositioningClass::serialSendDistances();
     void DW1000PositioningClass::serialSendDistance(struct _Node _node);
-    void DW1000PositioningClass::loop();
+    void DW1000PositioningClass::serialDrawDistances();
     void DW1000PositioningClass::setDistance(uint8_t _address, float _distance);
+    void DW1000PositioningClass::setDistanceBetweenDevices(uint8_t _from, uint8_t _to, float _distance);
     struct _Node DW1000PositioningClass::getNextDevice();
     struct _Node DW1000PositioningClass::getDevice();
     String DW1000PositioningClass::createJsonPosition(struct _Node node);

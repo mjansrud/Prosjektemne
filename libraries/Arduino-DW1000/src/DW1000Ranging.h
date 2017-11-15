@@ -83,6 +83,7 @@ public:
 	static boolean addNetworkDevices(DW1000Device* device, boolean shortAddress);
 	static boolean addNetworkDevices(DW1000Device* device);
 	static void    removeNetworkDevices(int16_t index);
+    static void    removeAllNetworkDevices();
 	
 	//setters
 	static void setReplyTime(uint16_t replyDelayTimeUs);

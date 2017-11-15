@@ -117,17 +117,16 @@ void DW1000RangingClass::configureNetwork(uint16_t deviceAddress, uint16_t netwo
 }
 
 void DW1000RangingClass::generalStart() {
+    
 	// attach callback for (successfully) sent and received messages
 	DW1000.attachSentHandler(handleSent);
 	DW1000.attachReceivedHandler(handleReceived);
 	// anchor starts in receiving mode, awaiting a ranging poll message
 	
-	
 	if(DEBUG) {
 		// DEBUG monitoring
 		Serial.println("DW1000-arduino");
 		// initialize the driver
-		
 		
 		Serial.println("configuration..");
 		// DEBUG chip info and registers pretty printed
@@ -150,7 +149,6 @@ void DW1000RangingClass::generalStart() {
 		Serial.print("Device mode: ");
 		Serial.println(msg);
 	}
-	
 	
 	// anchor starts in receiving mode, awaiting a ranging poll message
 	receiver();
@@ -491,7 +489,8 @@ void DW1000RangingClass::loop() {
 			
 			
 			if((_networkDevicesNumber != 0) && (myDistantDevice == NULL)) {
-				Serial.println("Not found");
+                //addNetworkDevices(myDistantDevice);
+				//Serial.println("Not found");
 				//we don't have the short address of the device in memory
 				/*
 				Serial.print("unknown: ");
@@ -499,7 +498,7 @@ void DW1000RangingClass::loop() {
 				Serial.print(":");
 				Serial.println(address[1], HEX);
 				*/
-				return;
+                return;
 			}
 			
 			
