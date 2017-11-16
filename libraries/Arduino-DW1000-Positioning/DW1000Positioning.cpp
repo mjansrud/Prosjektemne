@@ -63,7 +63,7 @@ void DW1000PositioningClass::setDistanceBetweenDevices(uint8_t _from, uint8_t _t
     Serial.print("Msg,from:");
     Serial.print(_from);
     Serial.print(",to:");
-    Serial.print(_from);
+    Serial.print(_to);
     Serial.print(",range:");
     Serial.println(_distance);
 }

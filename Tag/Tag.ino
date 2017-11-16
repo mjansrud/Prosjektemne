@@ -85,10 +85,16 @@ void loop() {
         
         received = false;
         DW1000.getData(message);
+        
+        const size_t bufferSize = JSON_OBJECT_SIZE(4);
+        DynamicJsonBuffer jsonBuffer(bufferSize);
+        JsonObject& msg = jsonBuffer.parseObject(message);      
 
-        StaticJsonBuffer<JSON_OBJECT_SIZE(4) + 30> jsonBuffer;
-        JsonObject& msg = jsonBuffer.parseObject(message);
-        DW1000Positioning.setDistanceBetweenDevices(msg["from"], msg["to"], msg["range"]);
+        uint8_t from = msg["from"];
+        uint8_t to = msg["to"];
+        float range = msg["range"];
+        
+        DW1000Positioning.setDistanceBetweenDevices(from, to, range);
        
       } 
 
