@@ -85,7 +85,7 @@ void DW1000PositioningClass::calculateAnchorPositions(){
     float B = _devices[2].distances[3].distance;
     float C = _devices[1].distances[3].distance;
     
-    float X = (pow(A,2)+pow(B,2)-pow(C,2))/2*A;
+    float X = (pow(A,2)+pow(B,2)-pow(C,2))/(2*A);
     float Y = sqrt((-pow(A, 4)+2*pow(A,2)*(pow(B,2)+pow(C,2))-pow(pow(B,2)-pow(C,2),2))/(2*A));
     
     _devices[3].position.x = X;
@@ -99,7 +99,7 @@ void DW1000PositioningClass::calculateTagPositions(){
     float B = _devices[1].distance;
     float C = _devices[2].distance;
     
-    float X = (pow(A,2)+pow(B,2)-pow(C,2))/2*A;
+    float X = (pow(A,2)+pow(B,2)-pow(C,2))/(2*A);
     float Y = sqrt((-pow(A, 4)+2*pow(A,2)*(pow(B,2)+pow(C,2))-pow(pow(B,2)-pow(C,2),2))/(2*A));
     
     _device->position.x = X;

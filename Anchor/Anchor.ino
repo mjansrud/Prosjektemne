@@ -14,7 +14,7 @@ const uint8_t PIN_IRQ = 3; // irq pin
 const uint8_t PIN_SS = 4;  // spi select pin
 
 // network
-const uint8_t NETWORK_DEVICE_ADDRESS = 1;
+const uint8_t NETWORK_DEVICE_ADDRESS = 2;
 const uint8_t NETWORK_ID = 10;
 
 // other
