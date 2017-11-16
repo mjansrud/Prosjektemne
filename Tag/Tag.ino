@@ -19,6 +19,7 @@ const uint8_t NETWORK_ID = 10;
 
 // other
 const uint8_t NUM_DEVICES = 4; 
+const long DRAW_INTERVAL = 5000;      //milliseconds
 const long INIT_POLLING_TIME = 40000; //milliseconds
 const long CONFIG_TIME = 20000;       //milliseconds
 const float STANDARD_DEVIATION = -0.5;
@@ -32,6 +33,7 @@ volatile boolean error = false;
 // timers
 unsigned long time_current = 0;
 unsigned long time_start = 0;
+ unsigned long time_last_draw = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -45,8 +47,8 @@ void setup() {
   //Update anchor with correct info
   DW1000Positioning.initDevices();
   DW1000Positioning.startAsTag(NETWORK_DEVICE_ADDRESS);
-  DW1000Positioning.serialDrawDistances();
-
+  DW1000Positioning.calculatePositionsAndDraw();
+  
   Serial.print("Initiated tag -> Address "); 
   Serial.println(NETWORK_DEVICE_ADDRESS); 
 
@@ -62,6 +64,7 @@ void loop() {
       if(time_current > (INIT_POLLING_TIME / NUM_DEVICES) && !TEMP_ANCHOR){
         Serial.println("Temporarily becoming anchor");
         DW1000RangingInitConfiguration(ANCHOR);
+        DW1000Positioning.calculatePositionsAndDraw();
         TEMP_ANCHOR = true;
       } 
       
@@ -70,7 +73,7 @@ void loop() {
         Serial.println("Ready to receive data from beacons");
         DW1000MessagingInitConfiguration();
         DW1000Positioning.setState(RECEIVER);
-        DW1000Positioning.serialSendDistances(); 
+        DW1000Positioning.calculatePositionsAndDraw();
         // start a receiver
         receiver();        
       }
@@ -91,13 +94,23 @@ void loop() {
 
       //Switch state
       if(time_current > (INIT_POLLING_TIME + CONFIG_TIME)){
+          //Reset timer
+          time_last_draw = millis();
+
+          //Done receiving messages, reset to tag
           DW1000RangingInitConfiguration(TAG);
           DW1000Positioning.setState(RANGING);
+          DW1000Positioning.calculatePositionsAndDraw();
       }
     break;
     case RANGING:
       //Ranging state -> Check distances to nodes
       DW1000Ranging.loop();
+
+      if(millis() - time_last_draw >= DRAW_INTERVAL){
+        time_last_draw += DRAW_INTERVAL;
+        DW1000Positioning.calculatePositionsAndDraw();
+      }
     break;
   }
   

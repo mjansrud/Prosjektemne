@@ -23,6 +23,11 @@ struct _Node{
     uint8_t address = 0;
     float distance = 0.0;
     struct {
+        float x = 0.0;
+        float y = 0.0;
+        float z = 0.0;
+    } position;
+    struct {
         float distance = 0.0;
     } distances[_NUM_DEVICES];
 };
@@ -52,6 +57,9 @@ class DW1000PositioningClass {
     void DW1000PositioningClass::activeDevice(uint8_t address);
     void DW1000PositioningClass::inactiveDevice(uint8_t address);
     void DW1000PositioningClass::setState(_STATES state);
+    void DW1000PositioningClass::calculateAnchorPositions();
+    void DW1000PositioningClass::calculateTagPositions();
+    void DW1000PositioningClass::calculatePositions();
     void DW1000PositioningClass::serialSendPosititions();
     void DW1000PositioningClass::serialSendPositition(struct _Node _node);
     void DW1000PositioningClass::serialSendDistances();
@@ -59,11 +67,10 @@ class DW1000PositioningClass {
     void DW1000PositioningClass::serialDrawDistances();
     void DW1000PositioningClass::setDistance(uint8_t _address, float _distance);
     void DW1000PositioningClass::setDistanceBetweenDevices(uint8_t _from, uint8_t _to, float _distance);
+    void DW1000PositioningClass::calculatePositionsAndDraw();
     struct _Node DW1000PositioningClass::getNextDevice();
-    struct _Node DW1000PositioningClass::getDevice();
-    String DW1000PositioningClass::createJsonPosition(struct _Node node);
+    struct _Node* DW1000PositioningClass::getDevice();
     String DW1000PositioningClass::createJsonDistance(struct _Node node);
-    String DW1000PositioningClass::createJsonPositions();
     String DW1000PositioningClass::createJsonDistances();
     _STATES DW1000PositioningClass::getState();
 
@@ -72,7 +79,7 @@ class DW1000PositioningClass {
     _STATES _state = CONFIG;
     int _nextDevice = 0;
     bool _isTag = true;
-    struct _Node _device;
+    struct _Node* _device;
     struct _Node _devices[_NUM_DEVICES];
     
 };
