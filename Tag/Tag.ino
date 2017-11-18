@@ -33,7 +33,7 @@ volatile boolean error = false;
 // timers
 unsigned long time_current = 0;
 unsigned long time_start = 0;
- unsigned long time_last_draw = 0;
+unsigned long time_last_draw = 0;
 
 void setup() {
   Serial.begin(115200);
