@@ -12,8 +12,5 @@ cd /your−sketchbook−folder/
 git clone https://github.com/mjansrud/Prosjektemne.git
 ```
 4) Åpne Tag.ino og Anchor.ino
-```
-screen /dev/cu.usbserial-AI03L14K 115200
-```
 5) Bytt til korrekt NETWORK DEVICE ADDRESS. Tag/drone skal ha addresse 0, mens anker-nodene skal ha adresse 1-3 som vist i skisse 7.
 6) Last opp koden på mikrokontrollere med påkoblet DW1000
