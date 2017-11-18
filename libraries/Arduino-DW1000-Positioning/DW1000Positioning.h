@@ -33,7 +33,7 @@ struct _Node{
 };
 
 enum _MESSAGE_TYPE{
-    POSITION,
+    POSITION,       //Currently not in use, tag calculate position based on distances locally
     DISTANCE,
 };
 

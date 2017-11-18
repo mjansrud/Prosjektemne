@@ -24,6 +24,15 @@ void DW1000PositioningClass::startAsTag(uint8_t _address){
     
 }
 
+void DW1000PositioningClass::initDevices(){
+    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
+        struct _Node _node;
+        _node.address = i;
+        _devices[i] = _node;
+    }
+}
+
+//Initiates all devices with a random distance (0-100m) for debugging
 void DW1000PositioningClass::initTestDevices(){
     for (uint8_t i = 0; i < _NUM_DEVICES; i++){
         struct _Node _node;
@@ -32,15 +41,6 @@ void DW1000PositioningClass::initTestDevices(){
         for (uint8_t j = 0; j < _NUM_DEVICES; j++){
             _node.distances[j].distance = random(2, 100);
         }
-        _devices[i] = _node;
-    }
-}
-
-
-void DW1000PositioningClass::initDevices(){
-    for (uint8_t i = 0; i < _NUM_DEVICES; i++){
-        struct _Node _node;
-        _node.address = i;
         _devices[i] = _node;
     }
 }
@@ -60,6 +60,8 @@ void DW1000PositioningClass::setDistance(uint8_t _address, float _distance){
 
 void DW1000PositioningClass::setDistanceBetweenDevices(uint8_t _from, uint8_t _to, float _distance){
     _devices[_from].distances[_to].distance = _distance;
+    
+    //For debugging only
     Serial.print("Msg,from:");
     Serial.print(_from);
     Serial.print(",to:");
@@ -95,6 +97,7 @@ void DW1000PositioningClass::calculateAnchorPositions(){
 void DW1000PositioningClass::calculateTagPositions(){
     
     //We use pytagoras to calculate position in C, make two triangles and solve two equations for X and Y.
+    //Todo: can reuse some of the code from the previous function
     float A = _devices[1].distances[2].distance;
     float B = _devices[1].distance;
     float C = _devices[2].distance;
@@ -184,6 +187,8 @@ void DW1000PositioningClass::serialDrawDistances(){
 
     /*
      
+     Output:
+     
      Y
      |
      3
@@ -201,41 +206,7 @@ void DW1000PositioningClass::serialDrawDistances(){
      |  /                   \  \ 
      1 ------ 53.00 ------------ 2 -> X
      
-    // Alternative
-     
-    Serial.print(  "1 ------ "      );  Serial.print(_devices[1].distances[2].distance);    Serial.println(       " ------ 2");
-    Serial.print(  "| \\    "       );                                                      Serial.println( "           //"  );
-    Serial.print(  "|   "           );  Serial.print(_devices[1].distance);
-    Serial.print(     "      "      );  Serial.print(_devices[2].distance);                 Serial.println(           " /"   );
-    Serial.print(  "|       \\"     );                                                      Serial.println(  "    /    /"    );
-                                        Serial.print(_devices[1].distances[3].distance);
-    Serial.print(      "      0  "  );                                                      Serial.println(     "    /"      );
-    Serial.print(  "|        /     ");  Serial.println(_devices[2].distances[3].distance);
-    Serial.print(  "|       /     " );                                                      Serial.println(      " /"         );
-    Serial.print(  "|     "         );  Serial.print(_devices[3].distance);                 Serial.println(   "   /"          );
-    Serial.println("|     /    /"   );
-    Serial.println("|    /   /"     );
-    Serial.println("|   /  /"       );
-    Serial.println("|  / /"         );
-    Serial.println("| //"           );
-    Serial.println("3");
-     
-     1 ------ 53.00 ------ 2
-     | \                 //
-     |   8.00      90.00 /
-     |       \    /     /
-     13.00      0      /
-     |        /     17.00
-     |       /      /
-     |     51.00  /
-     |     /    /
-     |    /   /
-     |   /  /
-     |  / /
-     | //
-     3
-
-     */
+    */
     
 }
 

@@ -18,7 +18,7 @@ const uint8_t NETWORK_DEVICE_ADDRESS = 0;
 const uint8_t NETWORK_ID = 10;
 
 // other
-const uint8_t NUM_DEVICES = 4; 
+const uint8_t NUM_DEVICES = 4;        //total, inc. this device
 const long DRAW_INTERVAL = 5000;      //milliseconds
 const long INIT_POLLING_TIME = 40000; //milliseconds
 const long CONFIG_TIME = 20000;       //milliseconds
@@ -41,10 +41,10 @@ void setup() {
 
   time_start = millis();
   
-  //Distances between beacons are needed for configuration
+  // initiate the DW1000 Ranging library
   DW1000RangingInitConfiguration(TAG);
   
-  //Update anchor with correct info
+  // update tag with correct position configuration
   DW1000Positioning.initDevices();
   DW1000Positioning.startAsTag(NETWORK_DEVICE_ADDRESS);
   DW1000Positioning.calculatePositionsAndDraw();
@@ -68,19 +68,20 @@ void loop() {
         TEMP_ANCHOR = true;
       } 
       
-      //Switch state
+      // switch state
       if(time_current > INIT_POLLING_TIME){
         Serial.println("Ready to receive data from beacons");
         DW1000MessagingInitConfiguration();
         DW1000Positioning.setState(RECEIVER);
         DW1000Positioning.calculatePositionsAndDraw();
+        
         // start a receiver
         receiver();        
       }
     break;    
     case RECEIVER:
     
-      //Config state -> Receive messages
+      // config state -> Receive messages
       if (received) {
         
         received = false;
@@ -98,21 +99,22 @@ void loop() {
        
       } 
 
-      //Switch state
+      // switch state
       if(time_current > (INIT_POLLING_TIME + CONFIG_TIME)){
-          //Reset timer
+          // reset timer
           time_last_draw = millis();
 
-          //Done receiving messages, reset to tag
+          // done receiving messages, reset to tag
           DW1000RangingInitConfiguration(TAG);
           DW1000Positioning.setState(RANGING);
           DW1000Positioning.calculatePositionsAndDraw();
       }
     break;
     case RANGING:
-      //Ranging state -> Check distances to nodes
+      // ranging state -> Check distances to nodes
       DW1000Ranging.loop();
 
+      // draw distances each x seconds
       if(millis() - time_last_draw >= DRAW_INTERVAL){
         time_last_draw += DRAW_INTERVAL;
         DW1000Positioning.calculatePositionsAndDraw();
@@ -123,17 +125,17 @@ void loop() {
 }
 
 /*
- * Configurations
+ * configurations
  */
 
 void DW1000RangingInitConfiguration(uint8_t type){
-  // Ranging driver configuration 
+  // arnging driver configuration 
   DW1000Ranging.initCommunication(PIN_RST, PIN_SS, PIN_IRQ); //Reset, CS, IRQ pin
   DW1000Ranging.attachNewRange(interuptNewRange);
   DW1000Ranging.attachNewDevice(interuptNewDevice);
   DW1000Ranging.attachInactiveDevice(interuptInactiveDevice);
 
-  //We need to temporarily become anchor to let anchors receive distances between each other
+  // we need to temporarily become anchor to let anchors receive distances between each other
   if(type == ANCHOR){
       DW1000Ranging.startAsAnchor(NETWORK_DEVICE_ADDRESS, DW1000.MODE_LONGDATA_RANGE_ACCURACY, NETWORK_DEVICE_ADDRESS);
   }else{
@@ -143,7 +145,7 @@ void DW1000RangingInitConfiguration(uint8_t type){
 
  void DW1000MessagingInitConfiguration(){
   
-  // Message driver configuration
+  // nessage driver configuration
   DW1000.begin(PIN_IRQ, PIN_RST);
   DW1000.select(PIN_SS);
   DW1000.newConfiguration();
@@ -179,7 +181,7 @@ void receiver() {
   DW1000.startReceive();
 }
 
-//Interupts 
+// interupts 
 void interuptNewRange() {
   uint8_t address = (DW1000Ranging.getDistantDevice()->getShortAddress() / 1U) % 10;
   float range = DW1000Ranging.getDistantDevice()->getRange() + STANDARD_DEVIATION;
