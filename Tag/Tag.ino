@@ -8,7 +8,7 @@
 #include <DW1000Positioning.h>
 #include <ArduinoJson.h>
 
-// connection pins
+// connection pins 
 const uint8_t PIN_RST = 2; // reset pin
 const uint8_t PIN_IRQ = 3; // irq pin
 const uint8_t PIN_SS = 4;  // spi select pin
@@ -204,7 +204,7 @@ void interuptInactiveDevice(DW1000Device* device) {
   Serial.print("Inactive device, address:");
   Serial.println(address);
   if(DW1000Positioning.getState() == RANGING){
-    DW1000Positioning.inactiveDevice(address);
+    //DW1000Positioning.inactiveDevice(address);
   }
 }
 
